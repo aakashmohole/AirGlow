@@ -60,14 +60,14 @@ async def get_current_user(token:str=Depends(oauth2_scheme)):
         raise HTTPException(status_code=401, detail="Invalid Credentials")
 
 
-@router.get("login/google")
+@router.get("/login/google")
 async def login_google(request : Request):
     redirect_uri=request.url_for("auth_google")
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
-@router.get("auth/google")
+@router.get("/auth/google")
 async def auth_google(request : Request):
-    token= oauth.google.athorize_access_token(request)
+    token= await oauth.google.authorize_access_token(request)
     user_info=token.get("userinfo")
     jwt_token=create_access_token(data={"sub":user_info.get("email")})
     return {
