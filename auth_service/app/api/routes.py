@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
-from database import SessionLocal
+from app.db.database import SessionLocal
 from jose import JWTError, jwt
 from fastapi.responses import RedirectResponse
-import schema
-import models
-from auth import hash_password, verify_password, create_access_token
+import app.schemas.user as schema
+import app.models.user as models
+from app.core.security import hash_password, verify_password, create_access_token
 from dotenv import load_dotenv
-from auth import oauth
+from app.core.security import oauth
 import os
 
 router=APIRouter()

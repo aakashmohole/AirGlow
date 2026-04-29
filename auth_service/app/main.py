@@ -1,7 +1,7 @@
 from fastapi import FastAPI
-from routers import router
-from database import engine,Base
-import models 
+from app.api.routes import router
+from app.db.database import engine, Base
+import app.models.user as models
 from starlette.middleware.sessions import SessionMiddleware
 import os
 
@@ -21,4 +21,4 @@ app.include_router(router)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)
