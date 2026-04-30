@@ -3,6 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 import os
+from fastapi import Request
 
 load_dotenv()
 
@@ -14,4 +15,9 @@ else:
     engine=create_engine(DATABASE_URL)
 
 SessionLocal=sessionmaker(autocommit=False, autoflush=False, bind=engine)
+async def login_google(request : Request):
+    redirect_uri=request.url_for("auth_google")
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
 Base=declarative_base()
+

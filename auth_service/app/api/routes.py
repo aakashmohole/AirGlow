@@ -60,10 +60,6 @@ async def get_current_user(token:str=Depends(oauth2_scheme)):
         raise HTTPException(status_code=401, detail="Invalid Credentials")
 
 
-@router.get("/login/google")
-async def login_google(request : Request):
-    redirect_uri=request.url_for("auth_google")
-    return await oauth.google.authorize_redirect(request, redirect_uri)
 
 @router.get("/auth/google")
 async def auth_google(request : Request):
@@ -75,4 +71,27 @@ async def auth_google(request : Request):
         "user":user_info,
         "access_token":jwt_token
     }
+
+@router.get("/login/google")
+async def login_google(request : Request):
+    redirect_uri=request.url_for("auth_google")
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+
+@router.get("/auth/github")
+async def auth_github(request:Request):
+    token=await oauth.github.authorize_access_token(request)
+    resp = await oauth.github.get("user", token=token)
+    user_info = resp.json()
+    jwt_token=create_access_token(data={"sub":user_info.get("email") or user_info.get("login")})
+    return {
+        "provider":"Github",
+        "user":user_info,
+        "access_token":jwt_token
+    }
+
+@router.get("/login/github")
+async def login_github(request:Request):
+    redirect_uri=request.url_for("auth_github")
+    return await oauth.github.authorize_redirect(request, redirect_uri)
 
