@@ -61,8 +61,6 @@ flowchart TD
 Port: 8000
 Tech: FastAPI
 Responsibilities:
-  - User authentication (JWT)
-  - Tenant isolation
   - Pipeline CRUD operations
   - Manual run triggers (POST /pipelines/{id}/run)
   - Run status queries (GET /runs/{id})
