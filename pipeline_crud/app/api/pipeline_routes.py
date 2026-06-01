@@ -3,16 +3,13 @@ from sqlalchemy.orm import Session
 from app.db.database import SessionLocal
 from app.models.pipeline import Pipeline
 from app.schemas.schemas import PipelineCreate, PipelineUpdate, PipelineResponse
+from app.db.dependencies import get_db
+
 
 
 router=APIRouter(prefix="/pipelines",tags=["Pipelines"])
 
-def get_db():
-    db=SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+
 
 
 @router.post("/", response_model=PipelineResponse)
@@ -24,13 +21,12 @@ def create_pipeline(pipeline:PipelineCreate, db:Session=Depends(get_db)):
     return new_pipeline
 
 
-@router.get("/", response_model=PipelineResponse)
-def get_pipelines(db:Session=Depends(get_db)):
-    pipeline = db.query(Pipeline).all()
-    return pipeline
+@router.get("/", response_model=list[PipelineResponse])
+def get_pipelines(db: Session = Depends(get_db)):
+    pipelines = db.query(Pipeline).all()
+    return pipelines
 
-
-@router.get("/{pipelie_id}", response_model=PipelineResponse)
+@router.get("/{pipeline_id}", response_model=PipelineResponse)
 def get_pipeline(pipeline_id:int, db:Session=Depends(get_db)):
     pipeline=db.query(Pipeline).filter(Pipeline.id==pipeline_id).first()
     if not pipeline:
