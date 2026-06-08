@@ -1,12 +1,17 @@
-from fastapi import APIRouter, Depends, FastAPI, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import FastAPI
+from app.api.dag import router as dag_router
+from app.api.run import router as run_router
+from app.db.database import Base, engine
+from app.db.init_db import init_db
 
-from app.models.dag import DAG
-from app.schemas.dag import DAGCreate, DAGResponse
-from app.db.dependencies import get_db
-from app.api.dag_crud import router as dag_router
 
-app= FastAPI()
+app= FastAPI(title="AirGlow")
+
+
+@app.on_event("startup")
+def startup():
+    init_db()
+
+
 app.include_router(dag_router)
-
-
+app.include_router(run_router)

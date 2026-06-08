@@ -25,7 +25,7 @@ class TransformRule(BaseModel):
 
 class DestionationConfig(BaseModel):
     type:str
-    table:str
+    table:Optional[str]=None
 
 Source_config=Union[APISource, CSVSource, DBSource]
 
@@ -50,10 +50,13 @@ class DAGResponse(BaseModel):
     destination_config:DestionationConfig   
     created_at:datetime
 
-
-
-
-
+class DAGUpdate(BaseModel):
+    dag_name: str
+    dag_type: str
+    scheduler: str
+    source_config: Dict[str, Any]
+    transform_config: List[Dict[str, Any]]
+    destination_config: Dict[str, Any]
 
 
 
