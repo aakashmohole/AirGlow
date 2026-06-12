@@ -26,12 +26,14 @@ class TransformRule(BaseModel):
 class DestionationConfig(BaseModel):
     type:str
     table:Optional[str]=None
+    file_path : Optional[str]= None
 
 Source_config=Union[APISource, CSVSource, DBSource]
 
 
 
 class DAGCreate(BaseModel):
+    # user_id: int
     dag_name:str
     dag_type:str
     scheduler:str

@@ -3,6 +3,12 @@ from app.api.dag import router as dag_router
 from app.api.run import router as run_router
 from app.db.database import Base, engine
 from app.db.init_db import init_db
+from app.models.output_file import OutputFile
+from app.models.dag import DAG
+from app.models.dag_runs import DAGRun
+from app.models.dag_task import DAGTask
+
+# Base.metadata.create_all(bind=engine) 
 
 
 app= FastAPI(title="AirGlow")

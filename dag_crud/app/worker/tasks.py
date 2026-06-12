@@ -5,7 +5,9 @@ from app.models.dag_runs import DAGRun
 from app.models.dag import DAG
 from app.services.extractor import extract_data
 from app.services.transformer import transform_data
+from app.models.output_file import OutputFile
 from app.services.loader import load_data
+
 
 
 @celery.task(name="app.worker.tasks.run_dag")
@@ -24,15 +26,38 @@ def run_dag(dag_id, run_id):
             db.commit()
 
         data = extract_data(dag.source_config)
+
         records_extracted=len(data) if isinstance(data, list) else 1
 
         transformed_data = transform_data(
             data,
             dag.transform_config
         )
+
         records_transformed= len(transformed_data) if isinstance(transformed_data, list) else 1
 
-        load_data(transformed_data, dag.destination_config)
+        # load_result= load_data(
+        #     transformed_data,
+        #     dag.destination_config
+        # )
+        load_result = {
+            "file_name":"users.json",
+            "file_type":"json",
+            "content":transformed_data,
+            "rows":len(transformed_data)
+        }
+        output_file = OutputFile(
+            dag_id=dag.id,
+            run_id=run.id,
+            file_name=load_result["file_name"],
+            content = load_result["content"],
+            file_type = load_result["file_type"],
+            records_count=load_result["rows"]
+            )
+        db.add(output_file)
+        db.commit()
+
+
 
         if run:
             run.status = "success"
@@ -44,11 +69,14 @@ def run_dag(dag_id, run_id):
                 "destination": dag.destination_config,
                 "records_extracted": records_extracted,
                 "records_transformed": records_transformed,
+                "records_loaded":load_result["rows"],
+                "output_file": load_result["file_name"],
                 "message": "DAG executed successfully"
             }
             db.commit()
 
     except Exception as e:
+        db.rollback()
         if run :
             run.status = "failed"
             run.end_time = datetime.utcnow()
