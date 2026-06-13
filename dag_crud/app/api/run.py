@@ -17,3 +17,21 @@ def run_pipeline(dag_id: int, db: Session = Depends(get_db)):
     run_dag.delay(dag_id,dag_run.id)
 
     return {"message": f"DAG {dag_id} execution started", "run_id": dag_run.id}
+
+@router.get("/runs")
+def get_runs(db:Session = Depends(get_db)):
+    return db.query(DAGRun)\
+    .order_by(DAGRun.id.desc())\
+    .all()
+
+@router.get("/runs/{run_id}")
+def get_run(run_id:int, db:Session=Depends(get_db)):
+    run =  db.query(DAGRun).filter(
+        DAGRun.id==run_id
+    ).first()
+
+    if not run:
+        raise HTTPException(404, "Run not found")
+    
+    return run
+

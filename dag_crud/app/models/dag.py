@@ -7,11 +7,11 @@ class DAG(Base):
     __tablename__="dags"
 
     id=Column(Integer, primary_key=True, index=True)
-    # user_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, nullable=False)
     dag_name=Column(String, nullable=False)
     dag_type=Column(String, nullable=False)  # etl/elt/batch
-    scheduler=Column(String, nullable=False)    # auto/manual
-
+    scheduler_type=Column(String, default="manual")    # auto/manual
+    cron_expression=Column(String, nullable=True)
     source_config=Column(JSON, nullable=False)
     transform_config=Column(JSON)
     destination_config=Column(JSON)

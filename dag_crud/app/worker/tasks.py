@@ -7,10 +7,14 @@ from app.services.extractor import extract_data
 from app.services.transformer import transform_data
 from app.models.output_file import OutputFile
 from app.services.loader import load_data
+from croniter import croniter
 
 
 
-@celery.task(name="app.worker.tasks.run_dag")
+
+@celery.task(name="app.worker.tasks.run_dag",
+            autoretry_for=(Exception,),
+            retry_kwargd={"max_retries":3, "countdown":30})
 def run_dag(dag_id, run_id):
     db = SessionLocal()
     try:
@@ -75,6 +79,15 @@ def run_dag(dag_id, run_id):
             }
             db.commit()
 
+
+
+        start = datetime.utcnow()
+        end = datetime.utcnow()
+        run.execution_time= (end-start).total_seconds()
+        run.records_extracted = records_extracted
+        run.records_transformed = records_transformed
+        run.records_loaded = load_result["rows"]
+
     except Exception as e:
         db.rollback()
         if run :
@@ -87,21 +100,23 @@ def run_dag(dag_id, run_id):
 
    
 
-
-
 def is_dag_due(dag):
-    scheduler = str(dag.scheduler).lower()
-
-    if dag.scheduler == "manual":
-        return False
-    if dag.scheduler == "hourly":
-        return True
-    if dag.scheduler == "daily":
-        return True
-    if ":" in str(dag.scheduler):
-        now = datetime.utcnow().strftime("%H:%M")
-        return now == dag.scheduler
     
+    if dag.scheduler_type == "manual":
+        return False
+    if dag.scheduler_type == "cron":
+        cron = dag.cron_expression
+        if not cron:
+            return False
+        now = datetime.utcnow()
+        previous_run = croniter(
+            cron, now
+        ).get_prev(datetime)
+
+        diff=(
+            now-previous_run
+        ).total_seconds()
+        return diff < 60
     return False
 
 

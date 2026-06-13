@@ -7,6 +7,7 @@ from app.models.output_file import OutputFile
 from app.models.dag import DAG
 from app.models.dag_runs import DAGRun
 from app.models.dag_task import DAGTask
+from app.api.dashboard import router as dashboard_router
 
 # Base.metadata.create_all(bind=engine) 
 
@@ -21,3 +22,4 @@ def startup():
 
 app.include_router(dag_router)
 app.include_router(run_router)
+app.include_router(dashboard_router)

@@ -36,7 +36,8 @@ class DAGCreate(BaseModel):
     # user_id: int
     dag_name:str
     dag_type:str
-    scheduler:str
+    scheduler_type:str
+    cron_expression : Optional[str]=None
     source_config:Source_config
     transform_config:list[TransformRule]=None
     destination_config:DestionationConfig
@@ -46,7 +47,8 @@ class DAGResponse(BaseModel):
     id:int
     dag_name:str
     dag_type:str
-    scheduler:str
+    scheduler_type: str
+    cron_expression : Optional[str]
     source_config:Source_config
     transform_config:List[TransformRule]=None
     destination_config:DestionationConfig   
@@ -55,7 +57,8 @@ class DAGResponse(BaseModel):
 class DAGUpdate(BaseModel):
     dag_name: str
     dag_type: str
-    scheduler: str
+    scheduler_type: str
+    cron_expression : Optional[str]
     source_config: Dict[str, Any]
     transform_config: List[Dict[str, Any]]
     destination_config: Dict[str, Any]
