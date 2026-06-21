@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
 from app.db.database import SessionLocal
 from app.models.dag import DAG
@@ -12,12 +12,14 @@ import pandas as pd
 from croniter import croniter
 from app.core.auth import get_current_user
 from fastapi import Request
+from app.core.rate_limiting import limiter
 
 
 router=APIRouter(prefix="/dags",tags=["DAGs"])
 
 
 @router.post("/", response_model=DAGResponse)
+@limiter.limit("20/minute")
 def create_dag(
     payload: DAGCreate,
     current_user=Depends(get_current_user),

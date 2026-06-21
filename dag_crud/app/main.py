@@ -8,12 +8,19 @@ from app.models.dag import DAG
 from app.models.dag_runs import DAGRun
 from app.models.dag_task import DAGTask
 from app.api.dashboard import router as dashboard_router
-
+from slowapi.middleware import SlowAPIMiddleware
+from app.core.rate_limiting import limiter
 # Base.metadata.create_all(bind=engine) 
 
 
 app= FastAPI(title="AirGlow")
 
+app.state.limiter = limiter
+
+
+app.add_middleware(
+    SlowAPIMiddleware 
+)
 
 @app.on_event("startup")
 def startup():

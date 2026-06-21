@@ -8,6 +8,8 @@ from app.services.transformer import transform_data
 from app.models.output_file import OutputFile
 from app.services.loader import load_data
 from croniter import croniter
+from app.core.webhook_sender import send_webhook
+from app.models import Webhook
 
 
 
@@ -134,3 +136,12 @@ def scan_and_trigger_dags():
                 run_dag.delay(dag.id, run.id)
     finally:
         db.close()
+
+
+send_webhook(
+    Webhook.callback_url,
+    {
+        "dag_id": DAG.dag_id,
+        "status": "success"
+    }
+)

@@ -5,6 +5,8 @@ from app.db.dependencies import get_db
 from app.models.dag import DAG
 from app.models.dag_runs import DAGRun
 from app.models.output_file import OutputFile
+from app.core.cache import redis_client
+import json
 
 router = APIRouter(
     prefix="/dashboard",
@@ -13,7 +15,12 @@ router = APIRouter(
 
 @router.get("/stats")
 def stats(db:Session=Depends(get_db)):
-    return{
+
+    cache = redis_client.get("dashboard_stats")
+    if cache:
+        return json.loads(cache)
+
+    result = {
         "total_dags":
             db.query(DAG).count(),
 
@@ -32,3 +39,10 @@ def stats(db:Session=Depends(get_db)):
         "files_generated":
             db.query(OutputFile).count()
     }
+
+    redis_client.setex(
+        "dashboard_stats",
+        60,
+        json.dumps(result)
+    )
+    return result

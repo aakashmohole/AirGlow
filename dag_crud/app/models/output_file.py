@@ -1,7 +1,5 @@
-from sqlalchemy import Column , Integer, String, ForeignKey, Text , JSON
+from sqlalchemy import Column , Integer, String, ForeignKey , JSON
 from app.db.database import Base
-
-
 class OutputFile(Base):
     __tablename__="output_files"
                                                                                                       
