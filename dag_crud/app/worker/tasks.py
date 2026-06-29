@@ -9,7 +9,7 @@ from app.models.output_file import OutputFile
 from app.services.loader import load_data
 from croniter import croniter
 from app.core.webhook_sender import send_webhook
-from app.models import Webhook
+from app.models.webhook import Webhook
 
 
 
@@ -90,6 +90,17 @@ def run_dag(dag_id, run_id):
         run.records_transformed = records_transformed
         run.records_loaded = load_result["rows"]
 
+
+        if webhook:
+
+            send_webhook(
+                webhook.callback_url,
+                {
+                    "dag_id": DAG.id,
+                    "status": "success"
+                }
+            )
+
     except Exception as e:
         db.rollback()
         if run :
@@ -137,11 +148,3 @@ def scan_and_trigger_dags():
     finally:
         db.close()
 
-
-send_webhook(
-    Webhook.callback_url,
-    {
-        "dag_id": DAG.dag_id,
-        "status": "success"
-    }
-)

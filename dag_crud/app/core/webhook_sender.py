@@ -5,6 +5,7 @@ def send_webhook(
         payload
 ):
     requests.post(
-        url,
-        json=payload
+        url=url,
+        json=payload,
+        timeout=5
     )
