@@ -10,6 +10,7 @@ from app.models.dag_task import DAGTask
 from app.api.dashboard import router as dashboard_router
 from slowapi.middleware import SlowAPIMiddleware
 from app.core.rate_limiting import limiter
+from app.api.webhook import router as webhook_router
 # Base.metadata.create_all(bind=engine) 
 
 
@@ -30,3 +31,4 @@ def startup():
 app.include_router(dag_router)
 app.include_router(run_router)
 app.include_router(dashboard_router)
+app.include_router(webhook_router)

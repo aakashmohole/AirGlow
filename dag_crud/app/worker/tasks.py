@@ -16,12 +16,40 @@ from app.models.webhook import Webhook
 
 @celery.task(name="app.worker.tasks.run_dag",
             autoretry_for=(Exception,),
-            retry_kwargs={"max_retries":3, "countdown":30})
+            retry_kwargs={"max_retries":3, "countdown":30},
+            retry_backoff=True,
+            retry_backoff_max=300,
+            retry_jitter=True)
 def run_dag(dag_id, run_id):
     db = SessionLocal()
+
+    start = datetime.utcnow()
+
     try:
         dag = db.query(DAG).filter(DAG.id == dag_id).first()
         run = db.query(DAGRun).filter(DAGRun.id == run_id).first()
+
+        webhook=(
+            db.query(Webhook)
+            .filter(webhook.dag_id == dag.id)
+            .first(),
+            db.commit()
+        )
+
+        if webhook:
+
+            send_webhook(
+                webhook.callback_url,
+                {
+                    "dag_id": dag.id,
+                    "run_id":run.id,
+                    "status": run.status,
+                    "execution_time":run.execution_time,
+                    "records_loaded":run.records_loaded
+                }
+            )
+
+        
 
         if not dag:
             raise Exception(f"DAG with id {dag_id} not found")
@@ -31,7 +59,7 @@ def run_dag(dag_id, run_id):
             run.start_time = datetime.utcnow()
             db.commit()
 
-        start = datetime.utcnow()
+        
 
         data = extract_data(dag.source_config)
 
@@ -81,7 +109,7 @@ def run_dag(dag_id, run_id):
                 "output_file": load_result["file_name"],
                 "message": "DAG executed successfully"
             }
-            db.commit()
+            
 
 
         end = datetime.utcnow()
@@ -123,7 +151,7 @@ def is_dag_due(dag):
         diff=(
             now-previous_run
         ).total_seconds()
-        return diff < 60
+        return diff < 60 
     return False
 
 
@@ -143,19 +171,5 @@ def scan_and_trigger_dags():
         db.close()
 
 
-    webhook=(
-            db.query(Webhook)
-            .filter(webhook.dag_id == dag.id)
-            .first()
-        )
-
-    if webhook:
-
-        send_webhook(
-            webhook.callback_url,
-            {
-               "dag_id": dag.id,
-                "status": "success"
-            }
-        )
+    
 
