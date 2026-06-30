@@ -16,7 +16,7 @@ from app.models.webhook import Webhook
 
 @celery.task(name="app.worker.tasks.run_dag",
             autoretry_for=(Exception,),
-            retry_kwargd={"max_retries":3, "countdown":30})
+            retry_kwargs={"max_retries":3, "countdown":30})
 def run_dag(dag_id, run_id):
     db = SessionLocal()
     try:
@@ -31,6 +31,8 @@ def run_dag(dag_id, run_id):
             run.start_time = datetime.utcnow()
             db.commit()
 
+        start = datetime.utcnow()
+
         data = extract_data(dag.source_config)
 
         records_extracted=len(data) if isinstance(data, list) else 1
@@ -42,16 +44,16 @@ def run_dag(dag_id, run_id):
 
         records_transformed= len(transformed_data) if isinstance(transformed_data, list) else 1
 
-        # load_result= load_data(
-        #     transformed_data,
-        #     dag.destination_config
-        # )
-        load_result = {
-            "file_name":"users.json",
-            "file_type":"json",
-            "content":transformed_data,
-            "rows":len(transformed_data)
-        }
+        load_result= load_data(
+            transformed_data,
+            dag.destination_config
+        )
+        # load_result = {
+        #     "file_name":"users.json",
+        #     "file_type":"json",
+        #     "content":transformed_data,
+        #     "rows":len(transformed_data)
+        # }
         output_file = OutputFile(
             dag_id=dag.id,
             run_id=run.id,
@@ -82,31 +84,23 @@ def run_dag(dag_id, run_id):
             db.commit()
 
 
-
-        start = datetime.utcnow()
         end = datetime.utcnow()
         run.execution_time= (end-start).total_seconds()
         run.records_extracted = records_extracted
         run.records_transformed = records_transformed
         run.records_loaded = load_result["rows"]
+        db.commit()
 
-
-        if webhook:
-
-            send_webhook(
-                webhook.callback_url,
-                {
-                    "dag_id": DAG.id,
-                    "status": "success"
-                }
-            )
+        
 
     except Exception as e:
         db.rollback()
         if run :
             run.status = "failed"
             run.end_time = datetime.utcnow()
-            run.log={"error": str(e)}
+            run.log={"status": "failed",
+                     "error": str(e),
+                    "time": datetime.utcnow().isoformat()}
             db.commit()
     finally:
             db.close()
@@ -147,4 +141,21 @@ def scan_and_trigger_dags():
                 run_dag.delay(dag.id, run.id)
     finally:
         db.close()
+
+
+    webhook=(
+            db.query(Webhook)
+            .filter(webhook.dag_id == dag.id)
+            .first()
+        )
+
+    if webhook:
+
+        send_webhook(
+            webhook.callback_url,
+            {
+               "dag_id": dag.id,
+                "status": "success"
+            }
+        )
 
