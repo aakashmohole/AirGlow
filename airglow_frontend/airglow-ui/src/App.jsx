@@ -1,8 +1,13 @@
-import { Router, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import Layout from "./components/Layout";
 
 function App() {
   return (
-    <Router>
+    <Routes>
       <Route path="/" element={<Login />} />
 
       <Route path="/register" element={<Register />} />
@@ -11,11 +16,13 @@ function App() {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <Layout>
+              <Dashboard />
+            </Layout>
           </ProtectedRoute>
         }
       />
-    </Router>
+    </Routes>
   );
 }
 

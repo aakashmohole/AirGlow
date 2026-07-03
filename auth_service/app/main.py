@@ -11,7 +11,13 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+origins= [
+    "http://localhost:5173",
+    "http://localhost:5174",
+]
+
 app.add_middleware(
+    
     SessionMiddleware,
     secret_key=os.getenv("SECRET_KEY")
 )

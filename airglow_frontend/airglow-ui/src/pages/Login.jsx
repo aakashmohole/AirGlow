@@ -43,14 +43,14 @@ export default function Login() {
             className="border p-3 rounded w-full mb-4"
             placeholder="Username"
             name="username"
-            onchange={handleChange}
+            onChange={handleChange}
           />
           <input
             className="border p-3 rounded w-full mb-4"
             placeholder="Password"
             type="password"
             name="password"
-            onchange={handleChange}
+            onChange={handleChange}
           />
           <button className="bg-blue-500 text-white p-3 rounded w-full hover:bg-blue-700 transition-colors">
             {loading ? "Logging in..." : "Login"}
