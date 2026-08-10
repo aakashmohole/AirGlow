@@ -1,4 +1,5 @@
 # AirGlow
+
 ## Working on auth functionality.
 
 docker build -t airglow_auth_service .
